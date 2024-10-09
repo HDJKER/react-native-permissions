@@ -1,6 +1,6 @@
 {
   "name": "@react-native-oh-tpl/react-native-permissions",
-  "version": "4.1.2-0.1.4",
+  "version": "4.1.2-0.1.5",
   "license": "MIT",
   "description": "An unified permissions API for React Native on HarmonyOS",
   "author": "Mathieu Acthernoene <zoontek@gmail.com>",
@@ -39,7 +39,7 @@
     "build": "bob build",
     "prepack": "yarn build",
     "update_version": "node ./scripts/update-version.js",
-    "deploy":"node ./scripts/deploy.js"
+    "deploy": "node ./scripts/deploy.js"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -69,6 +69,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "json5": "^2.2.3",
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
     "react": "18.2.0",

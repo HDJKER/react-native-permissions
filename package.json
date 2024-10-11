@@ -37,7 +37,9 @@
     "lint": "eslint './**/*.{js,ts,tsx}'",
     "typecheck": "tsc --noEmit",
     "build": "bob build",
-    "prepack": "yarn build"
+    "prepack": "yarn build",
+    "update_version": "node ./scripts/update-version.js",
+    "deploy": "node ./scripts/deploy.js"
   },
   "react-native-builder-bob": {
     "source": "src",

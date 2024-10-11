@@ -1,3 +1,12 @@
+/**
+ * 此脚本为用于发布release时进行的pr创建、tag创建等操作的半自动化脚本
+ * 执行此脚本前需要进行的额外工作
+ * 1、在系统环境变量中创建
+ *    a.GITHUB_TOKEN: (在github个人账户中创建，具体步骤可自行查找'github token如何创建', 需要勾选的权限-repo, admin:repo_hook, gist)
+ *    b.GITHUB_OWNER: (github用户名,)
+ * 
+ */
+
 // @ts-check
 const { execSync } = require('child_process');
 const { METHODS } = require('http');
@@ -19,26 +28,25 @@ if(!GITHUB_OWNER){
 
 console.log(`GITHUB_TOKEN is ${GITHUB_TOKEN}`);
 
-// 目前这段代码是npm发包和gitlab提交操作
-// 需要进行修改,改为github提交操作 以及github发release操作？
-
 // 文件夹名称
-const EXPECTED_EXECUTION_DIRECTORY_NAME =
-  'react-native-permissions';
-// 远程仓库地址
+const EXPECTED_EXECUTION_DIRECTORY_NAME = 'react-native-permissions';
+// 三方库名称
 const REPO_NAME = 'react-native-permissions';
+// 远程仓库地址
 const GITHUB_URL = 'https://github.com/HDJKER/react-native-permissions'
 // const GITHUB_PROJECT_ID = 522;  // 内部统一ID标识?
-// 库名
+// 模块名
 const MODULE_NAME = 'permissions';
 // har包的导出地址
 const HAR_FILE_OUTPUT_PATH = `tester/harmony/${MODULE_NAME}/build/default/outputs/default/${MODULE_NAME}.har`;
-// 发npm的包名
+// 发npm的组织名-包名
 const UNSCOPED_NPM_PACKAGE_NAME = '@react-native-oh-tpl/react-native-permissions';
 
 const GITHUB_REPOS = 'react-native-oh-library';
 const TARGET_BRANCH = 'sig'
-const RELEASE_BODY = `
+// pr描述信息
+const RELEASE_BODY = 
+`
 <!-- 感谢您提交PR！请按照模板填写，以便审阅者可以轻松理解和评估代码变更的影响。 -->
 
 # Summary
@@ -63,7 +71,6 @@ const RELEASE_BODY = `
 - [ ] 已经添加了对应 API 的测试用例（如需要）
 - [ ] 已经更新了文档（如需要）
 - [ ] 更新了 JS/TS 代码 (如有)
-
 `
 const rl = readline.createInterface({
   input: process.stdin,

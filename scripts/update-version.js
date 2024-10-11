@@ -13,7 +13,7 @@ const PACKAGE_DIR_NAME = 'react-native-permissions';
 const MODULE_NAME = 'permissions';
 
 // tgz打包名称(不带version)
-// react-native-oh-tpl-react-native-permissions-4.1.2-0.1.4 -> react-native-oh-tpl-react-native-permissions
+// 如 react-native-oh-tpl-react-native-permissions-4.1.2-0.1.4 -> react-native-oh-tpl-react-native-permissions
 const PACKAGE_TGZ_STEM_NAME_WITHOUT_VERSION =
   'react-native-oh-tpl-react-native-permissions';
 

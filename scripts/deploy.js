@@ -21,8 +21,9 @@ console.log(`GITHUB_TOKEN is ${GITHUB_TOKEN}`);
 const EXPECTED_EXECUTION_DIRECTORY_NAME =
   'react-native-permissions';
 // 远程仓库地址
+const REPO_NAME = 'react-native-permissions';
 const GITHUB_URL = 'https://github.com/HDJKER/react-native-permissions'
-const GITHUB_PROJECT_ID = 522;  // 内部统一ID标识?
+// const GITHUB_PROJECT_ID = 522;  // 内部统一ID标识?
 // 库名
 const MODULE_NAME = 'permissions';
 // har包的导出地址
@@ -32,6 +33,7 @@ const UNSCOPED_NPM_PACKAGE_NAME = '@react-native-oh-tpl/react-native-permissions
 
 const GITHUB_REPOS = 'react-native-oh-library';
 const GITHUB_OWNER = 'HDJKER';
+const TARGET_BRANCH = 'sig'
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -79,30 +81,17 @@ function runDeployment() {
 
           // 正常合入pr操作
           rl.question(
-            'Are changes good to be pushed to the upstream? (yes/no): ',
+            'Are changes good to be release? (yes/no): ',
             (answer) => {
-              if (answer.toLowerCase() !== 'yes') {
+              if (answer.toLowerCase() === 'yes') {
+               CommitAndPush(version);
+              }else{
                 // 没准备好push就直接退出
                 console.log('Deployment aborted.');
                 rl.close();
-              }else{
-                // add 存入缓存区
-          // execSync(
-          //   `git checkout -b ${GITHUB_OWNER}-${version}`
-          // );
-          execSync('git add -A');
-          // 输入commit信息
-            rl.question(
-              `\nfeat:新功能\nfix:修复BUG\ndocs:文档变更\nstyle:代码格式(不涉及代码运行的变动)\nrefactor:重构、可读性优化(既不是新增功能,也不是修复bug的代码变动)\n
-perf:优化相关,提升性能、体验\ntest:测试相关,如添加测试用例\nbuild:构建过程或辅助工具的变动\nchore:不涉及代码变动的杂项\nci:修改集成配置的文件或脚本\nrelease:版本发布\n输入此次commit的类型,及对应内容:\n`, 
-            (typeCont) => {
-                // 输入commit信息后进行提交并创建pr
-                CreatePr(typeCont);
-                })
               }
             }
           );
-          
         }
       );
     }
@@ -121,56 +110,54 @@ function harPackageMove(answer){
   console.log(
     `Copying ${`../${HAR_FILE_OUTPUT_PATH}`} to ./harmony dir`
   );
-  // if (!fs.existsSync(`../${HAR_FILE_OUTPUT_PATH}`)) {
-  //   console.log(`Couldn't find ${HAR_FILE_OUTPUT_PATH}.`);
-  //   process.exit(1);
-  // }
-  // fs.rmSync('./harmony', { recursive: true, force: true });
-  // fs.mkdirSync('./harmony');
-  // fs.renameSync(
-  //   `../${HAR_FILE_OUTPUT_PATH}`,
-  //   `./harmony/${MODULE_NAME}.har`
-  // );
+  if (!fs.existsSync(`../${HAR_FILE_OUTPUT_PATH}`)) {
+    console.log(`Couldn't find ${HAR_FILE_OUTPUT_PATH}.`);
+    process.exit(1);
+  }
+  fs.rmSync('./harmony', { recursive: true, force: true });
+  fs.mkdirSync('./harmony');
+  fs.renameSync(
+    `../${HAR_FILE_OUTPUT_PATH}`,
+    `./harmony/${MODULE_NAME}.har`
+  );
 }
 
 /**
  * 创建pr请求
- * @param   {string}  typeCont  
+ * @param   {string}  version  
  */
-function CreatePr(typeCont){
-  const reg = /feat:|fix:|docs:|style:|refactor:|perf:|test:|build:|chore:|ci:|release:/;
-  if(!reg.test(typeCont)){
-    console.log('请按照提示头进行commit提交')
-  }
-  
-  console.log(`your input:${typeCont}`)
+async function CommitAndPush(version){
+  // 根据新版本号新建分支
   execSync(
-    `git commit -m "${typeCont}"`,
+    `git checkout -b release-${UNSCOPED_NPM_PACKAGE_NAME}-${version}`
+  );
+  execSync('git add -A');
+  
+  // commit提交
+  execSync(
+    `git commit -m "release: ${UNSCOPED_NPM_PACKAGE_NAME}@${version}"`,
     {
       stdio: 'inherit',
     }
   );
-  
-  // 推送至个人仓库
-  // -u 设置上游分支 / origin HEAD 远程仓库的当前最新分支 / --no-verify强制跳过脚本执行
 
-  // execSync(`git push -u origin HEAD --no-verify`, {
-  //   stdio: 'inherit',
-  // });
-  // // 创建新tag 用于标记release
-  // // execSync(`git tag v${version}`);
-  // // 将新创建的tag推送至远程仓库
-  // // execSync(`git push -u origin v${version} --no-verify`, {
-  // //   stdio: 'inherit',
-  // // });
-  // // 创建pr请求
-  // const mergeRequestId = await createMergeRequest(
-  //   `${GITHUB_OWNER}-${version}`,
-  //   `docs: a auto pr script test`
-  //   // `release: ${UNSCOPED_NPM_PACKAGE_NAME}@${version}`
-  // );
+  // -u 设置上游分支 / origin HEAD 远程仓库的当前最新分支 / --no-verify强制跳过脚本执行
+  execSync(`git push -u origin HEAD --no-verify`, {
+    stdio: 'inherit',
+  });
+  // 创建新tag 用于标记release
+  execSync(`git tag v${version}`);
+  // 将新创建的tag推送至远程仓库
+  execSync(`git push -u origin v${version} --no-verify`, {
+    stdio: 'inherit',
+  });
+  // 创建pr请求
+  const mergeRequestId = await createMergeRequest(
+    `release-${UNSCOPED_NPM_PACKAGE_NAME}-${version}`,
+    `release: ${UNSCOPED_NPM_PACKAGE_NAME}@${version}`
+  );
   console.log(`Please merge the following Merge Request:\n
-  https://github.com/HDJKER/${UNSCOPED_NPM_PACKAGE_NAME}/pull/`);
+https://github.com/HDJKER/${UNSCOPED_NPM_PACKAGE_NAME}/pull/${mergeRequestId}`);
   rl.close();
 }
 
@@ -180,8 +167,7 @@ function CreatePr(typeCont){
 // 用于判断仓库是否处于 干净 的状态
 function isRepositoryClean() {
   // 查看仓库是否存在未提交的修改
-  const status = false;  // TODO 临时作用
-  // const status = execSync('git status --porcelain', { encoding: 'utf-8' });
+  const status = execSync('git status --porcelain', { encoding: 'utf-8' });
   // 查看当前所处于的分支名称 ".trim()"是用于去除首尾中可能出现的空白字符
   const branch = execSync('git branch --show-current', {
     encoding: 'utf-8',
@@ -195,8 +181,6 @@ function isRepositoryClean() {
   return !status && branch === 'sig' && isUpdated;
 }
 
-
-
 /**
  * 创建pr请求
  * @param {string} sourceBranch
@@ -204,46 +188,34 @@ function isRepositoryClean() {
  * @returns {Promise<number>}
  */
 async function createMergeRequest(sourceBranch, title) {
-  try{
+  try {
     const response = await fetch(
-      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOS}/pulls`,
+      `https://api.github.com/repos/${GITHUB_OWNER}/${REPO_NAME}/pulls`,
       {
-        method:'POST',
-        headers:{
-          'Authorization':GITHUB_TOKEN,
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${GITHUB_TOKEN}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           title: title,
-          source_branch: sourceBranch,
-          target_branch: 'sig',
-          squash:true,
-          remove_source_branch:false,
+          head: `${GITHUB_OWNER}:${sourceBranch}`, // 确保这里的 GITHUB_OWNER 是实际的用户名
+          base: `${TARGET_BRANCH}`, 
+          body: 'pr 描述测试',
+          delete_branch_on_merge: true, // 合并后删除源分支
         }),
       }
-    )
-    if (!response.ok){
-      throw new Error(`Failed to create pull request: ${response.statusText} ${response.status}`);
+    );
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(`Failed to create pull request: ${response.statusText} - ${response.status} - ${errorMessage}`);
     }
     const responseData = await response.json();
     return responseData.number; // 获取pr对应id号
-  }catch (error){
-    console.error('Error happens when create pull request:',error);
+  } catch (error) {
+    console.error('Error happens when create pull request:', error);
     throw error;
   }
 }
-
-// /**
-//  * @param {string} version
-//  *  @param {string} changelogForCurrentVersion
-//  */
-// function updateChangelog(version, changelogForCurrentVersion) {
-//   let data = fs.readFileSync('../CHANGELOG.md').toString();
-//   data = data.replace(
-//     '# Changelog',
-//     `# Changelog\n\n## v${version}\n ${changelogForCurrentVersion}`
-//   );
-//   fs.writeFileSync('../CHANGELOG.md', data);
-// }
 
 runDeployment();
